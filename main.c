@@ -1,9 +1,10 @@
 #include <X11/Xlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <time.h>
 #include <unistd.h>
 
-int main() {
+int main(int argc, char *argv[]) {
   Display *display = XOpenDisplay(NULL);
   Window window = DefaultRootWindow(display);
 
@@ -16,6 +17,14 @@ int main() {
     timeinfo = localtime(&rawtime);
 
     strftime(buffer, 80, "Time: %H:%M (%Y-%m-%d)", timeinfo);
+
+    int batteryPercentage = 0;
+    FILE *fp = fopen("/sys/class/power_supply/BAT0/capacity", "r");
+    if (fp) {
+      fscanf(fp, "%d", &batteryPercentage);
+      fclose(fp);
+      sprintf(buffer, "%s | Battery: %d%%", buffer, batteryPercentage);
+    }
 
     XStoreName(display, window, buffer);
     XFlush(display);
