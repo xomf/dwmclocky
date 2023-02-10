@@ -8,23 +8,22 @@ int main(int argc, char *argv[]) {
   Display *display = XOpenDisplay(NULL);
   Window window = DefaultRootWindow(display);
 
-  FILE *fp = fopen("/sys/class/power_supply/BAT0/capacity", "r");
-
   while (1) {
-    time_t rawTime;
-    struct tm *timeInfo;
+    time_t rawtime;
+    struct tm *timeinfo;
     char buffer[80];
 
-    time(&rawTime);
-    timeInfo = localtime(&rawTime);
+    time(&rawtime);
+    timeinfo = localtime(&rawtime);
 
-    strftime(buffer, 80, "Time: %H:%M (%Y-%m-%d)", timeInfo);
+    strftime(buffer, 80, "Time: %H:%M (%Y-%m-%d)", timeinfo);
 
+    int batteryPercentage = 0;
+    FILE *fp = fopen("/sys/class/power_supply/BAT0/capacity", "r");
     if (fp) {
-      char batteryCapacity[4];
-      fseek(fp, 0, SEEK_SET);
-      fscanf(fp, "%s", batteryCapacity);
-      sprintf(buffer, "%s | Battery: %s%%", buffer, batteryCapacity);
+      fscanf(fp, "%d", &batteryPercentage);
+      fclose(fp);
+      sprintf(buffer, "%s | Battery: %d%%", buffer, batteryPercentage);
     }
 
     XStoreName(display, window, buffer);
@@ -33,10 +32,6 @@ int main(int argc, char *argv[]) {
     sleep(1);
   }
 
-  if (fp) {
-    fclose(fp);
-  }
   XCloseDisplay(display);
   return 0;
 }
-
